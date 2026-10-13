@@ -1507,7 +1507,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="relative border-t border-white/5 px-6 py-8 text-center text-xs text-white/20">
-        MentoraAI • AWS-powered academic assistant
+        MentoraAI • AWS-powered academic assistant • CI/CD enabled
       </footer>
     </main>
   );
