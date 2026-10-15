@@ -1,0 +1,18 @@
+{
+  "name": "student-ai-backend",
+  "version": "1.0.0",
+  "description": "This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1138.0",
+    "express": "^5.2.1",
+    "multer": "^2.4.0"
+  }
+}
