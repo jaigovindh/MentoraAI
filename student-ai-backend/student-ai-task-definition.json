@@ -1,0 +1,22 @@
+{
+  "family": "student-ai-assistant",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::517093681748:role/PipelineRole",
+  "containerDefinitions": [
+    {
+      "name": "student-ai-assistant",
+      "image": "517093681748.dkr.ecr.us-east-1.amazonaws.com/student-ai-assistant:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ]
+}
