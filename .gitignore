@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Next.js build output
+.next/
+**/.next/
+out/
+
+# AWS SAM generated files
+.aws-sam/
+**/.aws-sam/
+
+# Uploaded files and local test data
+student-ai-backend/uploads/
+
+# Local build artifacts
+.DS_Store
+*.log
+coverage/
+
+# Local deployment packages
+student-ai-backend/lambda-test/function.zip

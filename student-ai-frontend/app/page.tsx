@@ -44,6 +44,19 @@ type Material = {
   uploadedAt?: string;
 };
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 type View = "dashboard" | "library";
 
 export default function Home() {
@@ -138,20 +151,60 @@ export default function Home() {
     };
   }
 
-  async function checkAuth() {
-    try {
-      await getCurrentUser();
-
-      setAuthenticated(true);
-
-      await loadMaterials();
-    } catch {
-      setAuthenticated(false);
-    }
-  }
-
   useEffect(() => {
-    checkAuth();
+    let cancelled = false;
+
+    async function initializeAuth() {
+      try {
+        await getCurrentUser();
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+
+        if (!token) {
+          throw new Error("Authentication token not available");
+        }
+
+        if (cancelled) return;
+
+        setAuthenticated(true);
+        setLoadingMaterials(true);
+
+        try {
+          const response = await fetch(`${API_URL}/materials`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Unable to load materials");
+          }
+
+          const data: unknown = await response.json();
+
+          if (!cancelled) {
+            setMaterials(Array.isArray(data) ? (data as Material[]) : []);
+          }
+        } catch (error: unknown) {
+          console.error("Load materials error:", error);
+        } finally {
+          if (!cancelled) {
+            setLoadingMaterials(false);
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setAuthenticated(false);
+        }
+      }
+    }
+
+    void initializeAuth();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleSignIn() {
@@ -174,12 +227,11 @@ export default function Home() {
       setAuthenticated(true);
 
       await loadMaterials();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       setAuthMessage(
-        error?.message ||
-          "Unable to sign in."
+        getErrorMessage(error, "Unable to sign in.")
       );
     } finally {
       setAuthLoading(false);
@@ -213,12 +265,11 @@ export default function Home() {
       setAuthMessage(
         "Account created. Check your email for the verification code."
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       setAuthMessage(
-        error?.message ||
-          "Unable to create account."
+        getErrorMessage(error, "Unable to create account.")
       );
     } finally {
       setAuthLoading(false);
@@ -248,12 +299,11 @@ export default function Home() {
       setAuthMessage(
         "Email verified. You can now sign in."
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       setAuthMessage(
-        error?.message ||
-          "Unable to verify account."
+        getErrorMessage(error, "Unable to verify account.")
       );
     } finally {
       setAuthLoading(false);
@@ -366,12 +416,11 @@ export default function Home() {
         data?.source ||
           "General AI knowledge"
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       setAnswer(
-        error?.message ||
-          "Unable to get an answer."
+        getErrorMessage(error, "Unable to get an answer.")
       );
 
       setAnswerSource("");
@@ -482,12 +531,11 @@ export default function Home() {
       }
 
       await loadMaterials();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       setUploadMessage(
-        error?.message ||
-          "Unable to upload material."
+        getErrorMessage(error, "Unable to upload material.")
       );
     } finally {
       setUploading(false);
@@ -530,12 +578,11 @@ export default function Home() {
         "_blank",
         "noopener,noreferrer"
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       alert(
-        error?.message ||
-          "Unable to open material."
+        getErrorMessage(error, "Unable to open material.")
       );
     } finally {
       setOpeningMaterial("");
@@ -591,12 +638,11 @@ export default function Home() {
       }
 
       await loadMaterials();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
 
       alert(
-        error?.message ||
-          "Unable to delete material."
+        getErrorMessage(error, "Unable to delete material.")
       );
     } finally {
       setDeletingMaterial("");
@@ -607,7 +653,7 @@ export default function Home() {
   // USE MATERIAL WITH AI
   // ============================================================
 
-  function useWithAI(
+  function selectMaterialForAI(
     materialId: string
   ) {
     setSelectedMaterialId(
@@ -1257,7 +1303,7 @@ export default function Home() {
                           material.materialId
                         }
                         onClick={() =>
-                          useWithAI(
+                          selectMaterialForAI(
                             material.materialId
                           )
                         }
@@ -1467,7 +1513,7 @@ export default function Home() {
 
                           <button
                             onClick={() =>
-                              useWithAI(
+                              selectMaterialForAI(
                                 material.materialId
                               )
                             }
@@ -1507,7 +1553,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="relative border-t border-white/5 px-6 py-8 text-center text-xs text-white/20">
-        MentoraAI • AWS-powered academic assistant • CI/CD enabled
+        MentoraAI • AWS-powered academic assistant
       </footer>
     </main>
   );
