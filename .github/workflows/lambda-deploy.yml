@@ -16,8 +16,8 @@ on:
       - ".github/workflows/lambda-deploy.yml"
 
 permissions:
-  contents: read
   id-token: write
+  contents: read
 
 jobs:
   validate-and-deploy:
